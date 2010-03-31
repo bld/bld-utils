@@ -1,5 +1,6 @@
 (in-package :bld-utils)
 
+
 (defmacro for (listspec exp)
   "From the Common Lisp Cookbook - http://cl-cookbook.sourceforge.net/macros.html"
    (cond ((and (= (length listspec) 3)
@@ -42,16 +43,3 @@ Helper function to (build-symbol)"
 		    `(make-symbol ,(symstuff l)))))
 	    (t
 	     `(values (intern ,(symstuff l))))))))
-
-(defun make-keyword (sym)
-  "Turn a symbol into a keyword with : appended"
-  (read
-   (make-string-input-stream
-    (format nil "~a"
-	    (build-symbol #\: (:< sym))))))
-
-(defun remove-package-from-sym (sym)
-  "Remove package name from symbol"
-  (read
-   (make-string-input-stream
-    (format nil "~a" sym))))
