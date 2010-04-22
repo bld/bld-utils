@@ -1,6 +1,5 @@
 (in-package :bld-utils)
 
-
 (defmacro for (listspec exp)
   "From the Common Lisp Cookbook - http://cl-cookbook.sourceforge.net/macros.html"
    (cond ((and (= (length listspec) 3)
@@ -43,3 +42,12 @@ Helper function to (build-symbol)"
 		    `(make-symbol ,(symstuff l)))))
 	    (t
 	     `(values (intern ,(symstuff l))))))))
+
+(defun make-keyword (name)
+  "Make a keyword with given name. Attempts to respect the current
+readtable case."
+  (intern (case (readtable-case *readtable*)
+            (:upcase (string-upcase name))
+            (:downcase (string-downcase name))
+            (t name))
+          :keyword))
