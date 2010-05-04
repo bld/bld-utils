@@ -51,3 +51,35 @@ readtable case."
             (:downcase (string-downcase name))
             (t name))
           :keyword))
+
+(defun remove-nth (n seq)
+  "Remove nth element from sequence"
+  (remove-if (constantly t) seq :start n :count 1))
+
+(defun make-hash (&rest keyvals)
+  "Create a hash table given keys and values"
+  (let ((h (make-hash-table)))
+    (loop while keyvals
+       for k = (pop keyvals)
+       for v = (pop keyvals)
+       when v do (setf (gethash k h) v))
+    h))
+
+(defmacro make-hash* (&rest keyvals)
+  "Make a hash table given key/value pairs, allowing use of prior key/val pairs in later definitions"
+  (loop while keyvals
+     for k = (pop keyvals)
+     for v = (pop keyvals)
+     collect `(,k ,v) into letargs
+     collect (make-keyword k) into objargs
+     collect k into objargs
+     finally (return
+	       `(let* (,@letargs)
+		  (make-hash ,@objargs)))))
+
+(defmacro lethash (hash keys &body body)
+  "constructs a let form declaring local variables to the names and values of the given keys of the given hash table"
+  `(let
+    (,@(loop for key in keys
+	     collecting `(,key (gethash ,(make-keyword key) ,hash))))
+     ,@body))
