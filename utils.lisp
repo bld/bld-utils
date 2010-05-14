@@ -83,3 +83,10 @@ readtable case."
     (,@(loop for key in keys
 	     collecting `(,key (gethash ,(make-keyword key) ,hash))))
      ,@body))
+
+(defmacro with-keys (keys hash-table &body body)
+  "Similar to WITH-SLOTS for classes, this macro replaces references to the keys with GETHASH forms"
+  (loop for key in keys
+     for newbody = (subst `(gethash ,(make-keyword key) ,hash-table) key body)
+     then (subst `(gethash ,(make-keyword key) ,hash-table) key newbody)
+     finally (return `(progn ,@newbody))))
