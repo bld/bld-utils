@@ -77,9 +77,15 @@ readtable case."
 	       `(let* (,@letargs)
 		  (make-hash ,@objargs)))))
 
-(defmacro lethash (hash keys &body body)
-  "constructs a let form declaring local variables to the names and values of the given keys of the given hash table"
-  `(let
-    (,@(loop for key in keys
-	     collecting `(,key (gethash ,(make-keyword key) ,hash))))
+(defmacro with-keys (keys hash &body body)
+  `(let (,@(loop for key in keys
+	      collect `(,key (gethash ,(make-keyword key) ,hash))))
      ,@body))
+
+(defun maphash2 (fn ht)
+  "Returns a hash-table with the results of the function of key & value as values"
+  (let ((ht-out (make-hash-table)))
+    (maphash #'(lambda (k v)
+		 (setf (gethash k ht-out) (funcall fn k v)))
+	     ht)
+    ht-out))
