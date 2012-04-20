@@ -238,3 +238,21 @@ R: right index"
                   (incf num-swaps)))
           while has-swapped
           finally (return (values l num-swaps)))))
+
+(defmacro lethash (keys h &body body)
+  "Let form binding hash table entries to let variables names"
+  (let ((ht (gensym)))
+    `(let ((,ht ,h))
+       (let ,(loop for key in keys
+		collect `(,key (gethash ,(make-keyword key) ,ht)))
+	 ,@body))))
+
+(defmacro with-keys (keys h &body body)
+  "Make keys of hash table available to body for use & changable via setf"
+  (let ((ht (gensym)))
+    (loop for key in keys
+       for newbody = (subst `(gethash ,(make-keyword key) ,ht) key body) 
+       then (subst `(gethash ,(make-keyword key) ,ht) key newbody)
+       finally (return `(let ((,ht ,h))
+			  ,@newbody)))))
+
