@@ -84,21 +84,6 @@ readtable case."
 	     ht)
     ht-out))
 
-;; Commented out. Redundant with later definition.
-#|
-(defmacro with-keys (keys hash &body body)
-  `(let (,@(loop for key in keys
-	      collect `(,key (gethash ,(make-keyword key) ,hash))))
-     ,@body))
-|#
-
-(defmacro with-keys (keys hash-table &body body)
-  "Similar to WITH-SLOTS for classes, this macro replaces references to the keys with GETHASH forms"
-  (loop for key in keys
-     for newbody = (subst `(gethash ,(make-keyword key) ,hash-table) key body)
-     then (subst `(gethash ,(make-keyword key) ,hash-table) key newbody)
-     finally (return `(progn ,@newbody))))
-
 (defun qsort (lst)
   "Quicksort a list - in 7 lines"
   (when lst
@@ -260,3 +245,20 @@ R: right index"
 		       v))
 	   h)
   (format stream ">"))
+
+(defmacro lethash (keys h &body body)
+  "Let form binding hash table entries to let variables names"
+  (let ((ht (gensym)))
+    `(let ((,ht ,h))
+       (let ,(loop for key in keys
+		collect `(,key (gethash ,(make-keyword key) ,ht)))
+	 ,@body))))
+
+(defmacro with-keys (keys h &body body)
+  "Make keys of hash table available to body for use & changable via setf"
+  (let ((ht (gensym)))
+    (loop for key in keys
+       for newbody = (subst `(gethash ,(make-keyword key) ,ht) key body) 
+       then (subst `(gethash ,(make-keyword key) ,ht) key newbody)
+       finally (return `(let ((,ht ,h))
+			  ,@newbody)))))
