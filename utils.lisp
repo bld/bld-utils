@@ -58,7 +58,7 @@ readtable case."
 
 (defun make-hash (&rest keyvals)
   "Create a hash table given keys and values"
-  (let ((h (make-hash-table)))
+  (let ((h (make-hash-table :test #'equal)))
     (loop while keyvals
        for k = (pop keyvals)
        for v = (pop keyvals)
@@ -76,12 +76,6 @@ readtable case."
      finally (return
 	       `(let* (,@letargs)
 		  (make-hash ,@objargs)))))
-
-(defmacro with-keys (keys hash &body body)
-  `(let (,@(loop for key in keys
-	      collect `(,key (gethash ,(make-keyword key) ,hash))))
-     ,@body))
-
 (defun maphash2 (fn ht)
   "Returns a hash-table with the results of the function of key & value as values"
   (let ((ht-out (make-hash-table)))
@@ -89,6 +83,14 @@ readtable case."
 		 (setf (gethash k ht-out) (funcall fn k v)))
 	     ht)
     ht-out))
+
+;; Commented out. Redundant with later definition.
+#|
+(defmacro with-keys (keys hash &body body)
+  `(let (,@(loop for key in keys
+	      collect `(,key (gethash ,(make-keyword key) ,hash))))
+     ,@body))
+|#
 
 (defmacro with-keys (keys hash-table &body body)
   "Similar to WITH-SLOTS for classes, this macro replaces references to the keys with GETHASH forms"
@@ -238,3 +240,23 @@ R: right index"
                   (incf num-swaps)))
           while has-swapped
           finally (return (values l num-swaps)))))
+
+(defun printhash (h &optional (stream t))
+  (format stream "#<HASH-TABLE")
+  (maphash #'(lambda (k v)
+	       (format stream
+		       (cond
+			 ((keywordp k) " :~a")
+			 ((stringp k) " \"~a\"")
+			 ((symbolp k) " '~a")
+			 (t " ~a" k))
+		       k)
+	       (format stream
+		       (cond
+			 ((keywordp v) " :~a")
+			 ((stringp v) " \"~a\"")
+			 ((symbolp v) " '~a")
+			 (t " ~a" v))
+		       v))
+	   h)
+  (format stream ">"))
