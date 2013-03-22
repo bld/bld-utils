@@ -43,7 +43,7 @@ Helper function to (build-symbol)"
 	    (t
 	     `(values (intern ,(symstuff l))))))))
 
-(defun make-keyword (name)
+#+null(defun make-keyword (name)
   "Make a keyword with given name. Attempts to respect the current
 readtable case."
   (intern (case (readtable-case *readtable*)
@@ -262,3 +262,18 @@ R: right index"
        then (subst `(gethash ,(make-keyword key) ,ht) key newbody)
        finally (return `(let ((,ht ,h))
 			  ,@newbody)))))
+
+(defun linear-interpolation (ys xs x)
+  "Linear interpolation: calculate y(x) at x given table of ys and xs. Also returns index of lookup table interval."
+  (let* ((i (1- (position x xs :test #'>= :from-end t)))
+	 (a (/ (- (elt xs (1+ i)) x)
+	       (- (elt xs (1+ i)) (elt xs i))))
+	 (b (- 1 a)))
+    (values
+     (+ (* a (elt ys i)) 
+	(* b (elt ys (1+ i))))
+     i)))
+
+;;; WIP...
+#+null(defun spline-interpolation (ys xs x)
+	(let* ((i (1- (position x xs :test #'>= :from-end t))))))
