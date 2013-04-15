@@ -230,18 +230,18 @@ R: right index"
   (format stream "#<HASH-TABLE")
   (maphash #'(lambda (k v)
 	       (format stream
-		       (cond
-			 ((keywordp k) " :~a")
-			 ((stringp k) " \"~a\"")
-			 ((symbolp k) " '~a")
-			 (t " ~a" k))
+		       (typecase k
+			 (keyword " :~a")
+			 (string " \"~a\"")
+			 (symbol " '~a")
+			 (t " ~a"))
 		       k)
 	       (format stream
-		       (cond
-			 ((keywordp v) " :~a")
-			 ((stringp v) " \"~a\"")
-			 ((symbolp v) " '~a")
-			 (t " ~a" v))
+		       (typecase v
+			 (keyword " :~a")
+			 (string " \"~a\"")
+			 (symbol " '~a")
+			 (t " ~a"))
 		       v))
 	   h)
   (format stream ">"))
