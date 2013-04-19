@@ -12,5 +12,4 @@
 
   :components
   ((:file "package")
-   (:file "utils" :depends-on ("package")))
-  :depends-on ("alexandria"))
+   (:file "utils" :depends-on ("package"))))
