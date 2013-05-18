@@ -43,15 +43,6 @@ Helper function to (build-symbol)"
 	    (t
 	     `(values (intern ,(symstuff l))))))))
 
-#+null(defun make-keyword (name)
-  "Make a keyword with given name. Attempts to respect the current
-readtable case."
-  (intern (case (readtable-case *readtable*)
-            (:upcase (string-upcase name))
-            (:downcase (string-downcase name))
-            (t name))
-          :keyword))
-
 (defun remove-nth (n seq)
   "Remove nth element from sequence"
   (remove-if (constantly t) seq :start n :count 1))

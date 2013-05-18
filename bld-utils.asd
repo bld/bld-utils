@@ -9,7 +9,7 @@
   :maintainer "Benjamin L. Diedrich <ben@solarsails.info>"
   :license "MIT"
   :description "Utilities for a variety of tasks"
-
+  :depends-on ("alexandria")
   :components
   ((:file "package")
    (:file "utils" :depends-on ("package"))))

@@ -1,3 +1,4 @@
 (defpackage :bld-utils
   (:use :common-lisp)
-  (:export :for :build-symbol :make-keyword :remove-nth :make-hash :make-hash* :with-keys :maphash2 :qsort :qsort-swaps :isort :isorta :bubble-sort :printhash :lethash))
+  (:import-from :alexandria :make-keyword)
+  (:export :for :build-symbol :remove-nth :make-hash :make-hash* :with-keys :maphash2 :qsort :qsort-swaps :isort :isorta :bubble-sort :printhash :lethash))
