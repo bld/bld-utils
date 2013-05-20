@@ -43,15 +43,6 @@ Helper function to (build-symbol)"
 	    (t
 	     `(values (intern ,(symstuff l))))))))
 
-#+null(defun make-keyword (name)
-  "Make a keyword with given name. Attempts to respect the current
-readtable case."
-  (intern (case (readtable-case *readtable*)
-            (:upcase (string-upcase name))
-            (:downcase (string-downcase name))
-            (t name))
-          :keyword))
-
 (defun remove-nth (n seq)
   "Remove nth element from sequence"
   (remove-if (constantly t) seq :start n :count 1))
@@ -84,16 +75,16 @@ readtable case."
 	     ht)
     ht-out))
 
-(defun qsort (lst)
-  "Quicksort a list - in 7 lines"
+(defun qsort (lst &key (key #'identity) (predicate #'<))
+  "Quicksort a list - in 7 lines. Optional KEY and PREDICATE functions like SORT."
   (when lst
     (let* ((x (car lst))
            (xs (cdr lst))
-           (lt (loop for y in xs when (< y x) collect y))
-           (gte (loop for y in xs when (>= y x) collect y)))
-      (append (qsort lt) (list x) (qsort gte)))))
+           (lt (loop for y in xs when (funcall predicate (funcall key y) (funcall key x)) collect y))
+           (gte (loop for y in xs when (not (funcall predicate (funcall key y) (funcall key x))) collect y)))
+      (append (qsort lt :key key :predicate predicate) (list x) (qsort gte :key key :predicate predicate)))))
 
-(defun qsort-swaps (lst)
+#+null(defun qsort-swaps (lst)
   "Quicksort a list, counting the number of swaps a bubble-sort would have performed"
   (let ((swaps 0) ; initialize # swaps and result
         (res nil))
@@ -116,6 +107,31 @@ readtable case."
             ;; append sorted lt, x, and sorted gte
             (setq res (append ltsort (list x) gtesort))))))
     (values res swaps))) ; return result and # of swaps
+
+(defun qsort-swaps (lst &key (key #'identity) (predicate #'<))
+  "Quicksort a list, counting the number of swaps a bubble-sort would have performed"
+  (let ((swaps 0) ; initialize # swaps and result
+        (res nil))
+    (when lst ; if non-nil...
+      (let* ((x (car lst)) ; 1st element
+             (xs (cdr lst)) ; rest of list
+             (lt (loop for y in xs ; xs < x
+                       for i = 0 then (1+ i) ; list counter
+                       with lti = 0 ; # of elements collected
+                       when (funcall predicate (funcall key y) (funcall key x)) collect y ; collect if <
+                       and do ; and increment swaps & lti
+                       (incf swaps (1+ (- i lti)))
+                       (incf lti)))
+             (gte (loop for y in xs
+                        when (not (funcall predicate (funcall key y) (funcall key x))) collect y))) ; xs >= x. No swaps.
+        ;; Sort lt & gte, and increments swaps by the #'s returned
+        (multiple-value-bind (ltsort ltswaps) (qsort-swaps lt :key key :predicate predicate)
+          (multiple-value-bind (gtesort gteswaps) (qsort-swaps gte :key key :predicate predicate)
+            (incf swaps (+ ltswaps gteswaps))
+            ;; append sorted lt, x, and sorted gte
+            (setq res (append ltsort (list x) gtesort))))))
+    (values res swaps))) ; return result and # of swaps
+
 
 (defun isorta (a &optional (pred #'<=) (l 0) (r (length a)))
   "Destructive Insertion sort 1D array. Also returns number of swaps a bubble sort would have done.
@@ -226,25 +242,20 @@ R: right index"
           while has-swapped
           finally (return (values l num-swaps)))))
 
+(defun print-hash-key-or-val (kv stream)
+  (format stream (typecase kv
+		   (keyword " :~a")
+		   (string " \"~a\"")
+		   (symbol " '~a")
+		   (list " '~a")
+		   (t " ~a")) kv))
+
 (defun printhash (h &optional (stream t))
-  (format stream "#<HASH-TABLE")
-  (maphash #'(lambda (k v)
-	       (format stream
-		       (typecase k
-			 (keyword " :~a")
-			 (string " \"~a\"")
-			 (symbol " '~a")
-			 (t " ~a"))
-		       k)
-	       (format stream
-		       (typecase v
-			 (keyword " :~a")
-			 (string " \"~a\"")
-			 (symbol " '~a")
-			 (t " ~a"))
-		       v))
-	   h)
-  (format stream ">"))
+  (format stream "#<HASH-TABLE~{~a~a~}>"
+	  (loop for k being the hash-keys in h using (hash-value v)
+	     collect (print-hash-key-or-val k nil)
+	     collect (print-hash-key-or-val v nil))))
+
 
 (defmacro lethash (keys h &body body)
   "Let form binding hash table entries to let variables names"
