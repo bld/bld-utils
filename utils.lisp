@@ -285,6 +285,13 @@ R: right index"
 	(* b (elt ys (1+ i))))
      i)))
 
+(defun maptree (f tree)
+  (cond
+    ((null tree) nil)
+    ((atom tree) (funcall f tree))
+    (t (cons (maptree f (car tree))
+	     (maptree f (cdr tree))))))
+
 ;;; WIP...
 #+null(defun spline-interpolation (ys xs x)
 	(let* ((i (1- (position x xs :test #'>= :from-end t))))))
