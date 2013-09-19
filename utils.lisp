@@ -75,6 +75,12 @@ Helper function to (build-symbol)"
 	     ht)
     ht-out))
 
+(defun maphash-values2  (fn ht)
+  "Returns a hash-table with the results of the function of value as values"
+  (let ((ht-out (make-hash-table)))
+    (maphash #'(lambda (k v) (setf (gethash k ht-out) (funcall fn v))) ht)
+    ht-out))
+
 (defun qsort (lst &key (key #'identity) (predicate #'<))
   "Quicksort a list - in 7 lines. Optional KEY and PREDICATE functions like SORT."
   (when lst
@@ -275,23 +281,44 @@ R: right index"
 			  ,@newbody)))))
 
 (defun linear-interpolation (ys xs x)
-  "Linear interpolation: calculate y(x) at x given table of ys and xs. Also returns index of lookup table interval."
-  (let* ((i (1- (position x xs :test #'>= :from-end t)))
-	 (a (/ (- (elt xs (1+ i)) x)
-	       (- (elt xs (1+ i)) (elt xs i))))
-	 (b (- 1 a)))
-    (values
-     (+ (* a (elt ys i)) 
-	(* b (elt ys (1+ i))))
-     i)))
+  "Linear interpolation: calculate y(x) at x given table of ys and xs. Also returns index of lookup table interval. Works from first x to less than last x."
+  (let* ((i (position x xs :test #'>= :from-end t))
+	 (x0 (elt xs i))
+	 (x1 (elt xs (1+ i)))
+	 (y0 (elt ys i))
+	 (y1 (elt ys (1+ i))))
+    (+ y0 (* (- y1 y0) (- x x0) (/ (- x1 x0))))))
 
 (defun maptree (f tree)
+  "Map a function on the leaves of a tree"
   (cond
     ((null tree) nil)
     ((atom tree) (funcall f tree))
     (t (cons (maptree f (car tree))
 	     (maptree f (cdr tree))))))
 
-;;; WIP...
-#+null(defun spline-interpolation (ys xs x)
-	(let* ((i (1- (position x xs :test #'>= :from-end t))))))
+(defmethod diff ((l list))
+  "Return list of the 1st differences of given list: l(1)-l(0),...,l(n)-l(n-1)"
+  (loop for i below (1- (length l))
+     for li in l
+     collect (- (elt l (1+ i)) li)))
+
+(defmethod diff ((v vector))
+  "Return vector of the 1st differences of given vector: v(1)-v(0),...,v(n)-v(n-1)"
+  (let* ((n (length v))
+	 (v2 (make-array (1- n))))
+    (dotimes (i (1- n))
+      (setf (aref v2 i) (- (aref v (1+ i)) (aref v i))))
+    v2))
+
+(defmacro nested-slot (obj &rest slots)
+  "Call 'slot-value multiple times on object for each successive slot. Can be SETF."
+  (if (or (atom slots) (null (cdr slots)))
+      `(slot-value ,obj ',@slots)
+      `(nested-slot (slot-value ,obj ',(first slots)) ,@(rest slots))))
+
+(defmacro bind-nested-slots (forms obj &body body)
+  "For each form of (VAR SLOT1 SLOT2 ...) bind VAR to (NESTED-SLOT OBJ SLOT1 SLOT2 ...)"
+  `(let ,(loop for form in forms
+	    collect `(,(first form) (nested-slot ,obj ,@(rest form))))
+     ,@body))
