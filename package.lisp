@@ -20,5 +20,8 @@
 	   :maptree
 	   :diff
 	   :nested-slot
-	   :bind-nested-slots))
-
+	   :bind-nested-slots
+	   :slot-ref
+	   :slot-ref-set
+	   :hash-ref
+	   :hash-ref-set))

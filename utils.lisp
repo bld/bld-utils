@@ -311,14 +311,24 @@ R: right index"
       (setf (aref v2 i) (- (aref v (1+ i)) (aref v i))))
     v2))
 
-(defmacro nested-slot (obj &rest slots)
-  "Call 'slot-value multiple times on object for each successive slot. Can be SETF."
-  (if (or (atom slots) (null (cdr slots)))
-      `(slot-value ,obj ',@slots)
-      `(nested-slot (slot-value ,obj ',(first slots)) ,@(rest slots))))
+(defun slot-ref (obj slots)
+  "Reference nested objects by a list of successive slot names. For example, (slot-ref o 'foo 'bar 'baz) should return (slot-value (slot-value (slot-value o 'foo) 'bar) 'baz)"
+  (cond
+    ((atom slots) (slot-value obj slots))
+    ((null (cdr slots)) (slot-value obj (car slots)))
+    (t (slot-ref (slot-value obj (first slots)) (rest slots)))))
+
+(defun slot-ref-set (obj slots val)
+  "Set nested object slot reference to new value"
+  (cond
+    ((atom slots) (setf (slot-value obj slots) val))
+    ((null (cdr slots)) (setf (slot-value obj (car slots)) val))
+    (t (slot-ref-set (slot-value obj (first slots)) (rest slots) val))))
+
+(defsetf slot-ref slot-ref-set)
 
 (defmacro bind-nested-slots (forms obj &body body)
   "For each form of (VAR SLOT1 SLOT2 ...) bind VAR to (NESTED-SLOT OBJ SLOT1 SLOT2 ...)"
   `(let ,(loop for form in forms
-	    collect `(,(first form) (nested-slot ,obj ,@(rest form))))
+	    collect `(,(first form) (slot-ref ,obj ',(rest form))))
      ,@body))
