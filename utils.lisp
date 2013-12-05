@@ -59,7 +59,7 @@ Helper function to (build-symbol)"
 (defmacro make-hash* (&rest keyvals)
   "Make a hash table given key/value pairs, allowing use of prior key/val pairs in later definitions"
   (loop while keyvals
-     for k = (find-symbol (symbol-name (pop keyvals)))
+     for k = (intern (symbol-name (pop keyvals)))
      for v = (pop keyvals)
      collect `(,k ,v) into letargs
      collect (make-keyword k) into objargs
