@@ -49,12 +49,7 @@ Helper function to (build-symbol)"
 
 (defun make-hash (&rest keyvals)
   "Create a hash table given keys and values"
-  (let ((h (make-hash-table :test #'equal)))
-    (loop while keyvals
-       for k = (pop keyvals)
-       for v = (pop keyvals)
-       when v do (setf (gethash k h) v))
-    h))
+  (plist-hash-table keyvals))
 
 (defmacro make-hash* (&rest keyvals)
   "Make a hash table given key/value pairs, allowing use of prior key/val pairs in later definitions"
@@ -67,6 +62,7 @@ Helper function to (build-symbol)"
      finally (return
 	       `(let* (,@letargs)
 		  (make-hash ,@objargs)))))
+
 (defun maphash2 (fn ht)
   "Returns a hash-table with the results of the function of key & value as values"
   (let ((ht-out (make-hash-table)))
@@ -89,30 +85,6 @@ Helper function to (build-symbol)"
            (lt (loop for y in xs when (funcall predicate (funcall key y) (funcall key x)) collect y))
            (gte (loop for y in xs when (not (funcall predicate (funcall key y) (funcall key x))) collect y)))
       (append (qsort lt :key key :predicate predicate) (list x) (qsort gte :key key :predicate predicate)))))
-
-#+null(defun qsort-swaps (lst)
-  "Quicksort a list, counting the number of swaps a bubble-sort would have performed"
-  (let ((swaps 0) ; initialize # swaps and result
-        (res nil))
-    (when lst ; if non-nil...
-      (let* ((x (car lst)) ; 1st element
-             (xs (cdr lst)) ; rest of list
-             (lt (loop for y in xs ; xs < x
-                       for i = 0 then (1+ i) ; list counter
-                       with lti = 0 ; # of elements collected
-                       when (< y x) collect y ; collect if <
-                       and do ; and increment swaps & lti
-                       (incf swaps (1+ (- i lti)))
-                       (incf lti)))
-             (gte (loop for y in xs
-                        when (>= y x) collect y))) ; xs >= x. No swaps.
-        ;; Sort lt & gte, and increments swaps by the #'s returned
-        (multiple-value-bind (ltsort ltswaps) (qsort-swaps lt)
-          (multiple-value-bind (gtesort gteswaps) (qsort-swaps gte)
-            (incf swaps (+ ltswaps gteswaps))
-            ;; append sorted lt, x, and sorted gte
-            (setq res (append ltsort (list x) gtesort))))))
-    (values res swaps))) ; return result and # of swaps
 
 (defun qsort-swaps (lst &key (key #'identity) (predicate #'<))
   "Quicksort a list, counting the number of swaps a bubble-sort would have performed"

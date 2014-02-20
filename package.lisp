@@ -1,6 +1,6 @@
 (defpackage :bld-utils
   (:use :common-lisp)
-  (:import-from :alexandria :make-keyword :maphash-values)
+  (:import-from :alexandria :make-keyword :maphash-values :plist-hash-table)
   (:export :for 
 	   :build-symbol 
 	   :remove-nth 
