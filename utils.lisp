@@ -65,7 +65,11 @@ Helper function to (build-symbol)"
 
 (defun maphash2 (fn ht)
   "Returns a hash-table with the results of the function of key & value as values"
-  (let ((ht-out (make-hash-table)))
+  (let ((ht-out (make-hash-table 
+		 :test (hash-table-test ht)
+		 :size (hash-table-size ht)
+		 :rehash-size (hash-table-rehash-size ht)
+		 :rehash-threshold (hash-table-rehash-threshold ht))))
     (maphash #'(lambda (k v)
 		 (setf (gethash k ht-out) (funcall fn k v)))
 	     ht)
@@ -229,7 +233,8 @@ R: right index"
 		   (t " ~a")) kv))
 
 (defun printhash (h &optional (stream t))
-  (format stream "#<HASH-TABLE~{~a~a~}>"
+  "Pretty print a hash table as :KEY VAL on separate lines"
+  (format stream "#<HASH-TABLE~{~a~a~^~&~}>"
 	  (loop for k being the hash-keys in h using (hash-value v)
 	     collect (print-hash-key-or-val k nil)
 	     collect (print-hash-key-or-val v nil))))
