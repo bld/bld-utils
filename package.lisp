@@ -1,6 +1,7 @@
 (defpackage :bld-utils
   (:use :common-lisp)
   (:import-from :alexandria :make-keyword :maphash-values :plist-hash-table)
+  (:import-from :let-over-lambda :plambda)
   (:export :for 
 	   :build-symbol 
 	   :remove-nth 
@@ -24,4 +25,5 @@
 	   :slot-ref
 	   :slot-ref-set
 	   :hash-ref
-	   :hash-ref-set))
+	   :hash-ref-set
+	   :defpfun))
