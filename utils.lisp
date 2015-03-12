@@ -311,7 +311,7 @@ R: right index"
 	    collect `(,(first form) (slot-ref ,obj ',(rest form))))
      ,@body))
 
-(defmacro defpfun (name args pargs &body body)
+#+null(defmacro defpfun (name args pargs &body body)
   "Define pandoric function given name, arguments, pandoric arguments,
 & body forms."
   `(setf (symbol-function ',name)
